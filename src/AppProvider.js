@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import App from './App';
 import Game from './screens/Game';
 import Main from './screens/Main';
 import EndGame from './screens/EndGame';
@@ -10,17 +9,25 @@ const history = createBrowserHistory();
 export default class AppProvider extends Component {
 	state = {
 		scores: 0,
+		height: 1000,
 	};
+
+	componentDidMount() {
+		const height = document.documentElement.clientHeight;
+		this.setState({height});
+	}
+
 
 	setScores = scores => this.setState({scores});
 
 	render() {
+		const {height} = this.state;
 		return (
 			<Router history={history}>
 				<Switch>
-					<Route path='/game'><Game setScores={this.setScores} history={history} /></Route>
-					<Route path='/end' ><EndGame scores={this.state.scores} /></Route>
-					<Route path='/' ><Main /></Route>
+					<Route path='/game'><Game height={height} setScores={this.setScores} history={history} /></Route>
+					<Route path='/end' ><EndGame height={height} scores={this.state.scores} /></Route>
+					<Route path='/' ><Main height={height} /></Route>
 				</Switch>
 			</Router>
 		);

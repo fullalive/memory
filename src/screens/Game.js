@@ -1,19 +1,18 @@
 import React, {Component} from 'react';
 import {Flex} from 'grid-styled';
-import EndGame from './EndGame';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
 import fetch from 'isomorphic-fetch';
 import get from 'lodash/get';
 import shuffle from 'lodash/shuffle';
-import {BrowserRouter as Router, Route, Switch, withRouter} from 'react-router-dom'
+import {withRouter} from 'react-router-dom'
 import createBrowserHistory from 'history/createBrowserHistory';
-const history = createBrowserHistory();
 
 class Game extends Component {
 	static propTypes = {
 		history: PropTypes.object,
 		setScores: PropTypes.func,
+		height: PropTypes.number,
 	};
 
 
@@ -90,7 +89,7 @@ class Game extends Component {
 				setTimeout(() => this.setState(prev => ({cards, clickedCards: [], scores: prev.scores + (9 - this.foundedCouples) * 42}), () =>
 					!cards.find(c => !c.isFounded) && this.endGame(), 1000));
 			}
-			setTimeout(() => this.setState(prev => ({clickedCards: [], scores: prev.scores - this.foundedCouples * 42})), 1000);
+			setTimeout(() => this.setState(prev => ({clickedCards: [], scores: prev.scores > 0 ? prev.scores - this.foundedCouples * 42 : 0})), 1000);
 		}
 	}
 
@@ -105,7 +104,7 @@ class Game extends Component {
 
 	renderRows() {
 		const rows = [];
-		for (let i = 0; i < 3; i++) {
+		for (let i = 0; i < 6; i++) {
 			rows.push(this.renderColumns(i));
 		}
 		return rows;
@@ -114,8 +113,8 @@ class Game extends Component {
 	renderColumns(row) {
 		const {cards} = this.state;
 		const columns = [];
-		for (let j = 0; j < 6; j++) {
-			columns.push(this.renderCard(cards[row * 6 + j]));
+		for (let j = 0; j < 3; j++) {
+			columns.push(this.renderCard(cards[row * 3 + j]));
 		}
 		return (
 			<Flex key={row} flexDirection='column'>
@@ -126,9 +125,9 @@ class Game extends Component {
 
 	renderCard(card) {
 		const {isAllFliped} = this.state;
-		return (card.isFounded ? <Flex style={{width: '108px', height: '150px'}} /> :
-				isAllFliped || this.isCardFliped(card) ? <img key={card.key} style={{height: '150px', width: '108px'}} src={card.image} alt={`${card.value} of ${card.suit}`} />
-					: <img onClick={() => this.handleClick(card)} key={Math.random()} style={{height: '150px', width: '108px'}} src={require('../images/notFlipedCard.png')} alt='not flipped' />
+		return (card.isFounded ? <Flex className='card' style={{width: '108px', height: '150px'}} /> :
+				isAllFliped || this.isCardFliped(card) ? <img className='card' key={card.key} style={{height: '150px', width: '108px'}} src={card.image} alt={`${card.value} of ${card.suit}`} />
+					: <img className='card' onClick={() => this.handleClick(card)} key={Math.random()} style={{height: '150px', width: '108px'}} src={require('../images/notFlipedCard.png')} alt='not flipped' />
 		);
 	}
 
@@ -138,15 +137,34 @@ class Game extends Component {
 	}
 
 	render() {
-		const {loading, scores} = this.state;
+		const {state: {loading, scores}, props: {height}} = this;
 		return (loading ? <Flex>loading</Flex> :
-			<Flex p={10} justifyContent='space-between'>
-				<Flex>{this.renderRows()}</Flex>
-				<Flex>Ваш счет: {scores}</Flex>
-			</Flex>
+			<Wrapper height={height} flexDirection='column'>
+				<Flex className='scores'>Ваш счет: {scores}</Flex>
+				<Flex flex={1} className='cards'>{this.renderRows()}</Flex>
+			</Wrapper>
 		);
 	}
 }
 
 export default withRouter(Game);
 
+const Wrapper = styled(({height, ...props}) => <Flex {...props} />)`
+	height: ${({height}) => `${height}px`};
+	padding: 10px;
+	background-color: rgb(0, 57, 22);
+	
+	.cards {
+		align-self: center;
+		margin-top: 20%;
+	}
+	
+	.card {
+		margin: 5px;
+	}
+	
+	.scores {
+		color: white;
+		font-weight: bold;
+	}
+`;
